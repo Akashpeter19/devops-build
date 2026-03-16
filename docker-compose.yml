@@ -1,0 +1,11 @@
+services:
+  devops-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devops-build:local
+    container_name: devops-build-container
+    platform: linux/amd64
+    ports:
+      - "80:80"
+    restart: unless-stopped
