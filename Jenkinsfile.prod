@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME_PROD = "app19/devops-build-prod:latest"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Prod Image') {
+            steps {
+                sh 'docker build -t devops-build:local .'
+            }
+        }
+
+        stage('Push Prod Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag devops-build:local $IMAGE_NAME_PROD
+                        docker push $IMAGE_NAME_PROD
+                    '''
+                }
+            }
+        }
+    }
+}
