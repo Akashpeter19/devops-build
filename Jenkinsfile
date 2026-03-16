@@ -2,24 +2,17 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME_DEV = "app19/devops-build-dev:latest"
+        IMAGE_NAME_DEV  = "app19/devops-build-dev:latest"
         IMAGE_NAME_PROD = "app19/devops-build-prod:latest"
-        APP_SERVER_IP = "13.232.228.100"
-        REPO_URL = "https://github.com/Akashpeter19/devops-build.git"
+        APP_SERVER_IP   = "13.232.228.100"
+        REPO_URL        = "https://github.com/Akashpeter19/devops-build.git"
     }
 
     stages {
-        stage('Checkout Dev Branch') {
-            steps {
-                git branch: 'dev',
-                    credentialsId: 'github-creds',
-                    url: "${REPO_URL}"
-            }
-        }
-
-        stage('Check Branch') {
+        stage('Checkout Branch') {
             steps {
                 script {
+                    checkout scm
                     env.GIT_BRANCH_NAME = sh(
                         script: "git rev-parse --abbrev-ref HEAD",
                         returnStdout: true
@@ -69,6 +62,30 @@ pipeline {
 EOF2
                         '''
                     }
+                }
+            }
+        }
+
+        stage('Build Prod Image') {
+            when {
+                expression { env.GIT_BRANCH_NAME == 'master' }
+            }
+            steps {
+                sh 'docker build -t devops-build:local .'
+            }
+        }
+
+        stage('Push Prod Image') {
+            when {
+                expression { env.GIT_BRANCH_NAME == 'master' }
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag devops-build:local $IMAGE_NAME_PROD
+                        docker push $IMAGE_NAME_PROD
+                    '''
                 }
             }
         }
