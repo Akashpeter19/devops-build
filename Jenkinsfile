@@ -5,7 +5,6 @@ pipeline {
         IMAGE_NAME_DEV  = "app19/devops-build-dev:latest"
         IMAGE_NAME_PROD = "app19/devops-build-prod:latest"
         APP_SERVER_IP   = "13.232.228.100"
-        REPO_URL        = "https://github.com/Akashpeter19/devops-build.git"
     }
 
     stages {
@@ -14,10 +13,10 @@ pipeline {
                 script {
                     checkout scm
                     env.GIT_BRANCH_NAME = sh(
-                        script: "git rev-parse --abbrev-ref HEAD",
+                        script: "git for-each-ref --contains HEAD --format='%(refname:short)' refs/remotes/origin | head -n 1 | sed 's#origin/##'",
                         returnStdout: true
                     ).trim()
-                    echo "Current branch is: ${env.GIT_BRANCH_NAME}"
+                    echo "Detected branch is: ${env.GIT_BRANCH_NAME}"
                 }
             }
         }
