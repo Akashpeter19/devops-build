@@ -12,10 +12,8 @@ pipeline {
             steps {
                 script {
                     checkout scm
-                    env.GIT_BRANCH_NAME = sh(
-                        script: "git for-each-ref --contains HEAD --format='%(refname:short)' refs/remotes/origin | head -n 1 | sed 's#origin/##'",
-                        returnStdout: true
-                    ).trim()
+                    env.GIT_BRANCH_NAME = (env.GIT_BRANCH ?: '').replace('origin/', '').trim()
+                    echo "Jenkins GIT_BRANCH is: ${env.GIT_BRANCH}"
                     echo "Detected branch is: ${env.GIT_BRANCH_NAME}"
                 }
             }
